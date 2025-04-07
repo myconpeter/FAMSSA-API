@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import UserModel from '../models/userModel.js';
 import generateToken from '../utils/generateToken.js';
 import jwt from 'jsonwebtoken';
+import { Console } from 'console';
 
 const Register = asyncHandler(async (req, res) => {
 	const { fullname, regno, email, password, password2 } = req.body;
@@ -53,6 +54,7 @@ const Register = asyncHandler(async (req, res) => {
 			fullname: user.fullname,
 			email: user.email,
 			regno: user.regno,
+			isAdmin: false,
 		},
 	});
 });
@@ -110,4 +112,60 @@ const Logout = asyncHandler(async (req, res) => {
 	res.status(200).json({ message: 'Successfully logged out' });
 });
 
-export { Register, Login, Logout };
+const UserDetails = asyncHandler(async (req, res) => {
+	if (!req.user) {
+		throw new Error('User Does Not Exist');
+	}
+
+	const user = await UserModel.findOne({ _id: req.user.userId }).select('-password');
+
+	if (!user) {
+		throw new Error('User Does Not Exist');
+	}
+
+	res.status(200).json(user);
+});
+
+const AllUsers = asyncHandler(async (req, res) => {
+	if (!req.user) {
+		res.status(403);
+		throw new Error('Access denied.');
+	}
+
+	const user = await UserModel.findOne({ _id: req.user.userId }).select('-password');
+
+	if (!user.isAdmin) {
+		res.status(403);
+		throw new Error('Access denied.');
+	}
+
+	// Fetch all users from the database
+	const users = await UserModel.find().select('-password'); // Exclude password field
+
+	res.status(200).json(users);
+});
+
+const DeleteUser = asyncHandler(async (req, res) => {
+	
+	if (!req.user) {
+		res.status(403);
+		throw new Error('Access denied.');
+	}
+
+	const user = await UserModel.findOne({ _id: req.user.userId }).select('-password');
+
+	
+	if (!user.isAdmin) {
+		res.status(403);
+		throw new Error('Access denied.');
+	}
+
+	const deleteUser = await UserModel.findByIdAndDelete(req.params.id);
+	if (!deleteUser) {
+		res.status(404);
+		throw new Error('User not found');
+	}
+	res.status(200).json({ message: 'User deleted successfully' });
+});
+
+export { Register, Login, Logout, UserDetails, AllUsers, DeleteUser };

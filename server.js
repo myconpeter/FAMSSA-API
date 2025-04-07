@@ -5,26 +5,26 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { errorHandler, notFount } from './middlewares/errorMiddeware.js';
 import userRoutes from './routes/authRoute.js';
+import bookRoutes from './routes/bookRoute.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url); // Get current file's URL
+const __dirname = path.dirname(__filename); // Get the directory name of the current file
 const app = express();
 
 const PORT = process.env.PORT;
 app.use(express.json());
-const allowedOrigins = ['http://localhost:5173', 'https://famssa-elibrary.onrender.com'];
-
 app.use(
 	cors({
-		origin: function (origin, callback) {
-			// allow requests with no origin (like mobile apps or curl)
-			if (!origin || allowedOrigins.includes(origin)) {
-				return callback(null, true);
-			}
-			return callback(new Error('Not allowed by CORS'));
-		},
-		credentials: true,
+		origin: '*', // Your frontend origin
+		credentials: true, // Allow cookies and credentials
 	})
 );
+
+app.use('/uploads', express.static('uploads'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -36,6 +36,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', userRoutes);
+app.use('/api/book', bookRoutes);
 app.use(errorHandler);
 
 app.use(notFount);
