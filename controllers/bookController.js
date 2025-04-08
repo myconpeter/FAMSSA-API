@@ -5,6 +5,8 @@ import UserModel from '../models/userModel.js';
 
 import fs from 'fs';
 import path from 'path';
+import cloudinary from '../utils/cloudinary.js'; // Make sure this import exists
+
 
 const UploadBook = asyncHandler(async (req, res) => {
 	// console.log(req.user)
@@ -12,7 +14,8 @@ const UploadBook = asyncHandler(async (req, res) => {
 
 	// console.log(req.body);
 	const { title, author, description, department, level, type } = req.body;
-	const pdfUrl = `/uploads/${req.file.filename}`; // Path to the PDF file
+	const pdfUrl = req.file.path; // 📦 Cloudinary returns full URL
+ // Path to the PDF file
 
 	if (!title || !author || !description || !department || !level || !type) {
 		res.status(401);
@@ -89,8 +92,8 @@ const AllBooks = asyncHandler(async (req, res) => {
 	res.status(200).json(books);
 });
 
+
 const DeleteBook = asyncHandler(async (req, res) => {
-	console.log(req.params);
 	if (!req.user) {
 		res.status(403);
 		throw new Error('Access denied.');
@@ -109,19 +112,17 @@ const DeleteBook = asyncHandler(async (req, res) => {
 		throw new Error('Book not found');
 	}
 
-	const book = theBook.pdfUrl;
-	console.log(book);
-	// ✅ Remove "/uploads/" from path and delete the file
-	const filename = book.replace('/uploads/', '');
-	const filePath = path.join(process.cwd(), 'uploads', filename);
+	const bookUrl = theBook.pdfUrl;
 
-	fs.unlink(filePath, (err) => {
-		if (err) {
-			console.error('Failed to delete file:', err.message);
-		} else {
-			console.log('PDF deleted from uploads folder');
-		}
-	});
+	// ✅ Extract the public ID from the Cloudinary URL
+	const publicId = bookUrl.split('/').pop().split('.')[0]; // e.g., '17123456789-filename'
+
+	try {
+		await cloudinary.uploader.destroy(`e-library-pdfs/${publicId}`, { resource_type: 'raw' });
+		console.log('PDF deleted from Cloudinary');
+	} catch (err) {
+		console.error('Cloudinary deletion error:', err.message);
+	}
 
 	await BookModel.findByIdAndDelete(req.params.id);
 

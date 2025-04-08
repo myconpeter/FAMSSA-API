@@ -1,21 +1,19 @@
-// config/upload.js
 import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../utils/cloudinary.js';
 
-// Define storage settings
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, 'uploads/'); // Specify the folder to store PDFs
-	},
-	filename: (req, file, cb) => {
-		cb(null, Date.now() + '-' + file.originalname); // Unique file name
+const storage = new CloudinaryStorage({
+	cloudinary: cloudinary,
+	params: {
+		folder: 'e-library-pdfs',
+		resource_type: 'auto', // ✅ Change from 'raw' to 'auto'
+		format: async (req, file) => 'pdf',
 	},
 });
 
-// Create multer upload middleware
 const upload = multer({
 	storage,
 	fileFilter: (req, file, cb) => {
-		// Only allow PDF files
 		if (file.mimetype === 'application/pdf') {
 			cb(null, true);
 		} else {
