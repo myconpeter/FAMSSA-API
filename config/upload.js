@@ -6,7 +6,7 @@ const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: 'e-library-pdfs',
-		resource_type: 'auto', // ✅ Change from 'raw' to 'auto'
+		resource_type: 'raw', // ✅ Change from 'raw' to 'auto'
 		format: async (req, file) => 'pdf',
 	},
 });
