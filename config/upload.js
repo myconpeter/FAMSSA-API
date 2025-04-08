@@ -6,8 +6,10 @@ const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: 'e-library-pdfs',
-		resource_type: 'raw', // ✅ Change from 'raw' to 'auto'
+		resource_type: 'raw',
 		format: async (req, file) => 'pdf',
+		public_id: (req, file) => `${Date.now()}-${file.originalname}`,
+		access_mode: 'public', // ✅ make it publicly accessible
 	},
 });
 

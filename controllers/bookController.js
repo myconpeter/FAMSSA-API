@@ -50,7 +50,7 @@ const GetBook = asyncHandler(async (req, res) => {
 	// console.log('params', req.query);
 	const { department, level, type } = req.query; // Get query parameters
 
-	console.log(department, level, type);
+	// console.log(department, level, type);
 
 	// Validate the presence of required parameters
 	if (!department || !level || !type) {
